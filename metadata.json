@@ -1,0 +1,12 @@
+{
+  "name": "CleanCity TN",
+  "description": "A public issue reporting app for Tamil Nadu cities. Capture garbage issues, pinpoint locations, and view heatmaps for Chennai, Coimbatore, Madurai, and more.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "camera",
+    "geolocation"
+  ]
+}

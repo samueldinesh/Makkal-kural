@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "Report": {
+      "title": "Report",
+      "description": "A public issue report (garbage, etc.)",
+      "type": "object",
+      "properties": {
+        "imageUrl": { "type": "string", "description": "URL of the captured image" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          },
+          "required": ["lat", "lng"]
+        },
+        "city": { "type": "string", "enum": ["Chennai", "Coimbatore", "Madurai", "Tiruppur", "Salem", "Trichy"] },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "validated", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "validations": { "type": "number" },
+        "reportedBy": { "type": "string" }
+      },
+      "required": ["imageUrl", "location", "city", "status", "createdAt", "validations"]
+    },
+    "Validation": {
+      "title": "Validation",
+      "description": "A record of a user validating a report",
+      "type": "object",
+      "properties": {
+        "reportId": { "type": "string" },
+        "userId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reportId", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Collection of public issue reports"
+    },
+    "/reports/{reportId}/validations/{userId}": {
+      "schema": "Validation",
+      "description": "Sub-collection to track unique validations per report"
+    }
+  }
+}

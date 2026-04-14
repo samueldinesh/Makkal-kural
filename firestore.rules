@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: reports
+    // Fields:
+    //   - imageUrl: string (required)
+    //   - location: map { lat: number, lng: number } (required)
+    //   - city: string (required, enum)
+    //   - description: string (optional)
+    //   - status: string (required, enum: pending, validated, resolved)
+    //   - createdAt: timestamp (required)
+    //   - validations: number (required)
+    //   - reportedBy: string (optional)
+    //
+    // Sub-collection: reports/{reportId}/validations
+    // Fields:
+    //   - reportId: string
+    //   - userId: string
+    //   - createdAt: timestamp
+    //
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidReport(data) {
+      return data.imageUrl is string && data.imageUrl.size() < 2000 &&
+             data.location is map && data.location.lat is number && data.location.lng is number &&
+             data.city in ['Chennai', 'Coimbatore', 'Madurai', 'Tiruppur', 'Salem', 'Trichy'] &&
+             data.status in ['pending', 'validated', 'resolved'] &&
+             data.createdAt is timestamp &&
+             data.validations is number && data.validations >= 0;
+    }
+
+    match /reports/{reportId} {
+      // Allow anyone to read reports (public map)
+      allow read: if true;
+      
+      // Allow authenticated users (including anonymous) to create reports
+      allow create: if isAuthenticated() && isValidReport(request.resource.data) &&
+                    request.resource.data.validations == 0 &&
+                    request.resource.data.status == 'pending';
+
+      // Allow updating validations count
+      allow update: if isAuthenticated() && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['validations', 'status']) &&
+                    request.resource.data.validations == resource.data.validations + 1;
+
+      match /validations/{userId} {
+        allow read: if true;
+        allow create: if isAuthenticated() && request.auth.uid == userId &&
+                      request.resource.data.reportId == reportId &&
+                      request.resource.data.userId == userId;
+      }
+    }
+  }
+}
